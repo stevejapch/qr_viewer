@@ -50,9 +50,11 @@
     const art = document.getElementById('art');
     const saveBtn = document.getElementById('saveBtn');
 
+    // 초기 숨김
     art.style.display = "none";
     saveBtn.style.display = "none";
 
+    // 로딩 컨테이너
     const loadingContainer = document.createElement('div');
     loadingContainer.style.display = "flex";
     loadingContainer.style.flexDirection = "column";
@@ -80,40 +82,53 @@
     loadingContainer.appendChild(text);
     document.body.insertBefore(loadingContainer, saveBtn);
 
+    // ✅ 캐시 키 (이미 본 이미지인지 확인)
+    const cacheKey = "loaded_" + imgUrl;
+
     if (imgUrl) {
       const finalUrl = imgUrl.startsWith("http") ? imgUrl : "images/" + imgUrl;
 
-      // 이미지 존재 여부 먼저 확인
-      fetch(finalUrl, { method: "HEAD", cache: "no-store" })
-        .then(res => {
-          if (res.ok) {
-            // 존재하면 로딩 표시 → 30초 후 이미지 표시
-            startLoadingSequence(finalUrl);
-          } else {
-            // ❌ 존재하지 않으면 바로 삭제 문구 표시
-            showDeletedMessage();
-          }
-        })
-        .catch(showDeletedMessage);
+      // ✅ 이전에 본 이미지라면 바로 표시
+      if (localStorage.getItem(cacheKey) === "true") {
+        showImage(finalUrl, false); // 로딩 없이 즉시 표시
+      } else {
+        // 처음 방문이라면 로딩 + 대기
+        startLoadingSequence(finalUrl);
+      }
     } else {
       showDeletedMessage();
     }
 
     function startLoadingSequence(finalUrl) {
-      // 로딩 중에는 스피너 유지
-      setTimeout(() => {
-        art.src = finalUrl + "?t=" + new Date().getTime();
-        art.onload = () => {
-          loadingContainer.remove();
-          art.style.display = "block";
-          saveBtn.style.display = "block";
-        };
-        art.onerror = showDeletedMessage;
-      }, 30000);
+      fetch(finalUrl, { method: "HEAD", cache: "no-store" })
+        .then(res => {
+          if (res.ok) {
+            setTimeout(() => {
+              showImage(finalUrl, true);
+            }, 30000); // 처음 방문 시 30초 대기
+          } else {
+            showDeletedMessage();
+          }
+        })
+        .catch(showDeletedMessage);
+    }
+
+    function showImage(finalUrl, firstLoad) {
+      art.src = finalUrl + "?t=" + new Date().getTime();
+      art.onload = () => {
+        loadingContainer.remove();
+        art.style.display = "block";
+        saveBtn.style.display = "block";
+        if (firstLoad) {
+          // ✅ 이미지가 로딩된 사실을 로컬 저장소에 기록
+          localStorage.setItem("loaded_" + imgUrl, "true");
+        }
+      };
+      art.onerror = showDeletedMessage;
     }
 
     function showDeletedMessage() {
-      loadingContainer.innerHTML = ""; // 기존 스피너 제거
+      loadingContainer.innerHTML = "";
       const msg = document.createElement('p');
       msg.textContent = "이미지가 삭제되었거나 존재하지 않습니다.";
       msg.style.fontSize = "1.1rem";
