@@ -39,81 +39,33 @@
 <body>
   <img id="art" src="" alt="Artwork">
   <button id="saveBtn">이미지 저장하기</button>
-<script defer>
-  const params = new URLSearchParams(window.location.search);
-  const imgUrl = params.get('img');
-  const art = document.getElementById('art');
-  const saveBtn = document.getElementById('saveBtn');
 
-  // 처음에는 이미지와 버튼 숨기기
-  art.style.display = "none";
-  saveBtn.style.display = "none";
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const imgUrl = params.get('img');
+    const art = document.getElementById('art');
+    const saveBtn = document.getElementById('saveBtn');
 
-  // 🔹 로딩 컨테이너 생성
-  const loadingContainer = document.createElement('div');
-  loadingContainer.style.display = "flex";
-  loadingContainer.style.flexDirection = "column";
-  loadingContainer.style.alignItems = "center";
-  loadingContainer.style.marginTop = "15vh";
-  loadingContainer.style.color = "#444";
-  loadingContainer.style.fontSize = "1.1rem";
-  loadingContainer.style.gap = "12px";
-
-  // 🔹 회전 스피너
-  const spinner = document.createElement('div');
-  spinner.style.border = "6px solid #eee";
-  spinner.style.borderTop = "6px solid black";
-  spinner.style.borderRadius = "50%";
-  spinner.style.width = "40px";
-  spinner.style.height = "40px";
-  spinner.style.animation = "spin 1s linear infinite";
-
-  // 🔹 텍스트
-  const text = document.createElement('p');
-  text.textContent = "이미지 업로드 중입니다... (잠시만 기다려주세요)";
-
-  // 컨테이너에 추가
-  loadingContainer.appendChild(spinner);
-  loadingContainer.appendChild(text);
-  document.body.insertBefore(loadingContainer, saveBtn);
-
-  // CSS 애니메이션
-  const style = document.createElement('style');
-  style.innerHTML = `
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    if (imgUrl) {
+    // 만약 URL이 절대경로(https://...)가 아니면 자동으로 images 폴더 안에서 찾기
+    let finalUrl = imgUrl;
+    if (!imgUrl.startsWith("http")) {
+      finalUrl = "images/" + imgUrl;
     }
-  `;
-  document.head.appendChild(style);
-
-  // 이미지 로드 순서 제어
-  if (imgUrl) {
-    // 20초 기다린 후 이미지 로드 시도
-    setTimeout(() => {
-      art.src = imgUrl + "?t=" + new Date().getTime(); // 캐시 무효화
-      art.onload = () => {
-        // 로딩 문구 제거
-        loadingContainer.remove();
-        // 이미지 및 버튼 표시
-        art.style.display = "block";
-        saveBtn.style.display = "block";
-      };
-    }, 20000); // 20초 지연
+    art.src = finalUrl;
   } else {
-    text.textContent = "이미지 URL이 없습니다.";
-    spinner.style.display = "none";
+    art.alt = "이미지 URL이 없습니다.";
+    saveBtn.style.display = "none";
   }
 
-  // 저장 버튼 동작
-  saveBtn.addEventListener('click', () => {
-    const link = document.createElement('a');
-    link.href = art.src;
-    link.download = 'selfportrait.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  });
-</script>
+    saveBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.href = art.src;
+      link.download = 'selfportrait.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  </script>
 </body>
 </html>
