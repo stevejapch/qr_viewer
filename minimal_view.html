@@ -47,11 +47,11 @@
   const art = document.getElementById('art');
   const saveBtn = document.getElementById('saveBtn');
 
-  // 처음엔 이미지/버튼 숨기기
+  // 로딩/버튼 초기 상태
   art.style.display = "none";
   saveBtn.style.display = "none";
 
-  // 🔹 로딩 문구 + 스피너 표시
+  // 로딩 UI 구성
   const loadingContainer = document.createElement('div');
   loadingContainer.style.display = "flex";
   loadingContainer.style.flexDirection = "column";
@@ -76,7 +76,6 @@
   loadingContainer.appendChild(text);
   document.body.insertBefore(loadingContainer, saveBtn);
 
-  // CSS 애니메이션 추가
   const style = document.createElement('style');
   style.innerHTML = `
     @keyframes spin {
@@ -86,30 +85,49 @@
   `;
   document.head.appendChild(style);
 
-  // 30초 뒤 이미지 자동 로드 시도
+  // ✅ 캐시 상태 확인용 키 (파일명으로 구분)
+  const cacheKey = "loaded_" + imgUrl;
+
   if (imgUrl) {
+    // 이미 로드된 이미지면 바로 표시
+    if (localStorage.getItem(cacheKey) === "true") {
+      showImageImmediately();
+    } else {
+      // 처음 접속 → 로딩 후 표시
+      startLoadingSequence();
+    }
+  } else {
+    text.textContent = "이미지 URL이 없습니다.";
+    spinner.style.display = "none";
+  }
+
+  function showImageImmediately() {
+    let finalUrl = imgUrl.startsWith("http") ? imgUrl : "images/" + imgUrl;
+    art.src = finalUrl + "?t=" + new Date().getTime();
+    art.onload = () => {
+      loadingContainer.remove();
+      art.style.display = "block";
+      saveBtn.style.display = "block";
+    };
+  }
+
+  function startLoadingSequence() {
     setTimeout(() => {
-      let finalUrl = imgUrl;
-      if (!imgUrl.startsWith("http")) {
-        finalUrl = "images/" + imgUrl;
-      }
-      art.src = finalUrl + "?t=" + new Date().getTime(); // 캐시 무효화
+      let finalUrl = imgUrl.startsWith("http") ? imgUrl : "images/" + imgUrl;
+      art.src = finalUrl + "?t=" + new Date().getTime();
       art.onload = () => {
+        localStorage.setItem(cacheKey, "true"); // ✅ 로드 완료 표시 저장
         loadingContainer.remove();
         art.style.display = "block";
         saveBtn.style.display = "block";
       };
       art.onerror = () => {
         text.textContent = "아직 업로드 중입니다... 잠시 후 다시 시도해주세요.";
-        setTimeout(() => location.reload(), 10000); // 10초 뒤 자동 재시도
+        setTimeout(() => location.reload(), 10000);
       };
-    }, 30000); // 30초 대기
-  } else {
-    text.textContent = "이미지 URL이 없습니다.";
-    spinner.style.display = "none";
+    }, 30000); // 첫 접속시만 30초 대기
   }
 
-  // 저장 버튼 기능
   saveBtn.addEventListener('click', () => {
     const link = document.createElement('a');
     link.href = art.src;
