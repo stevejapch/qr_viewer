@@ -50,7 +50,6 @@
     const art = document.getElementById('art');
     const saveBtn = document.getElementById('saveBtn');
 
-    // 초기 숨김
     art.style.display = "none";
     saveBtn.style.display = "none";
 
@@ -86,13 +85,15 @@
     const cacheKey = "loaded_" + imgUrl;
 
     if (imgUrl) {
-      const finalUrl = imgUrl.startsWith("http") ? imgUrl : "images/" + imgUrl;
+      // ✅ 깃허브 페이지용 절대경로 수정
+      const finalUrl = imgUrl.startsWith("http")
+        ? imgUrl
+        : "https://stevejapch.github.io/selfportrait/images/" + imgUrl;
 
       // ✅ 이전에 본 이미지라면 바로 표시
       if (localStorage.getItem(cacheKey) === "true") {
-        showImage(finalUrl, false); // 로딩 없이 즉시 표시
+        showImage(finalUrl, false);
       } else {
-        // 처음 방문이라면 로딩 + 대기
         startLoadingSequence(finalUrl);
       }
     } else {
@@ -105,7 +106,7 @@
           if (res.ok) {
             setTimeout(() => {
               showImage(finalUrl, true);
-            }, 30000); // 처음 방문 시 30초 대기
+            }, 30000);
           } else {
             showDeletedMessage();
           }
@@ -120,7 +121,6 @@
         art.style.display = "block";
         saveBtn.style.display = "block";
         if (firstLoad) {
-          // ✅ 이미지가 로딩된 사실을 로컬 저장소에 기록
           localStorage.setItem("loaded_" + imgUrl, "true");
         }
       };
