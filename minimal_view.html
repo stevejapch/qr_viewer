@@ -83,38 +83,32 @@
     const cacheKey = "loaded_" + imgUrl;
 
     if (imgUrl) {
-      const finalUrl = imgUrl.startsWith("http")
-        ? imgUrl
-        : "https://stevejapch.github.io/selfportrait/images/" + imgUrl;
+      // ✅ 현재 HTML 위치 기반으로 images 경로 자동 계산
+      const basePath = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "/");
+      const finalUrl = imgUrl.startsWith("http") ? imgUrl : basePath + "images/" + imgUrl;
 
-      // ✅ 이미 로드된 이미지면 즉시 표시
+      // ✅ 캐시 확인
       if (localStorage.getItem(cacheKey) === "true") {
         showImage(finalUrl, false);
       } else {
-        // ✅ 새로 로드하는 경우 30초 대기 → 이미지 확인
         startDelayedCheck(finalUrl);
       }
     } else {
       showDeletedMessage();
     }
 
-    // ✅ 30초 동안은 무조건 로딩 유지, 그 이후에만 이미지 존재 확인
     function startDelayedCheck(finalUrl) {
       setTimeout(() => {
-        checkImage(finalUrl);
+        fetch(finalUrl, { method: "HEAD", cache: "no-store" })
+          .then(res => {
+            if (res.ok) {
+              showImage(finalUrl, true);
+            } else {
+              showDeletedMessage();
+            }
+          })
+          .catch(showDeletedMessage);
       }, 30000);
-    }
-
-    function checkImage(finalUrl) {
-      fetch(finalUrl, { method: "HEAD", cache: "no-store" })
-        .then(res => {
-          if (res.ok) {
-            showImage(finalUrl, true);
-          } else {
-            showDeletedMessage();
-          }
-        })
-        .catch(showDeletedMessage);
     }
 
     function showImage(finalUrl, firstLoad) {
