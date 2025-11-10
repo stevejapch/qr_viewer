@@ -47,11 +47,16 @@
     const saveBtn = document.getElementById('saveBtn');
 
     if (imgUrl) {
-      art.src = imgUrl;
-    } else {
-      art.alt = "이미지 URL이 없습니다.";
-      saveBtn.style.display = "none";
+    // 만약 URL이 절대경로(https://...)가 아니면 자동으로 images 폴더 안에서 찾기
+    let finalUrl = imgUrl;
+    if (!imgUrl.startsWith("http")) {
+      finalUrl = "images/" + imgUrl;
     }
+    art.src = finalUrl;
+  } else {
+    art.alt = "이미지 URL이 없습니다.";
+    saveBtn.style.display = "none";
+  }
 
     saveBtn.addEventListener('click', () => {
       const link = document.createElement('a');
