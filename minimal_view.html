@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self Portrait</title>
+<style>
+  body {
+    background: white;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-family: sans-serif;
+  }
+  img {
+    max-width: 95vw;
+    max-height: 80vh;
+    object-fit: contain;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: none;
+    background: black;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #333;
+  }
+</style>
+</head>
+<body>
+  <img id="art" src="" alt="Artwork">
+  <button id="saveBtn">이미지 저장하기</button>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const imgUrl = params.get('img');
+    const art = document.getElementById('art');
+    const saveBtn = document.getElementById('saveBtn');
+
+    if (imgUrl) {
+      art.src = imgUrl;
+    } else {
+      art.alt = "이미지 URL이 없습니다.";
+      saveBtn.style.display = "none";
+    }
+
+    saveBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.href = art.src;
+      link.download = 'selfportrait.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  </script>
+</body>
+</html>
