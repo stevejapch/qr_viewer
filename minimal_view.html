@@ -34,46 +34,9 @@
   button:hover {
     background: #333;
   }
-
-  /* 🪞 거울 반사 로딩 */
-  .mirror-loader {
-    position: relative;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-  .mirror-loader span {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    background: black;
-    top: 50%;
-    left: 50%;
-    transform-origin: 0 0;
-    border-radius: 2px;
-    animation: mirrorAnim 1.2s ease-in-out infinite;
-  }
-  .mirror-loader span:nth-child(1) { transform: rotate(0deg); animation-delay: 0s; }
-  .mirror-loader span:nth-child(2) { transform: rotate(45deg); animation-delay: 0.1s; }
-  .mirror-loader span:nth-child(3) { transform: rotate(90deg); animation-delay: 0.2s; }
-  .mirror-loader span:nth-child(4) { transform: rotate(135deg); animation-delay: 0.3s; }
-  .mirror-loader span:nth-child(5) { transform: rotate(180deg); animation-delay: 0.4s; }
-  .mirror-loader span:nth-child(6) { transform: rotate(225deg); animation-delay: 0.5s; }
-  .mirror-loader span:nth-child(7) { transform: rotate(270deg); animation-delay: 0.6s; }
-  .mirror-loader span:nth-child(8) { transform: rotate(315deg); animation-delay: 0.7s; }
-
-  @keyframes mirrorAnim {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.3;
-    }
-    50% {
-      transform: scale(1.6);
-      opacity: 1;
-    }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 </style>
 </head>
@@ -87,11 +50,9 @@
     const art = document.getElementById('art');
     const saveBtn = document.getElementById('saveBtn');
 
-    // 초기 숨김
     art.style.display = "none";
     saveBtn.style.display = "none";
 
-    // 로딩 컨테이너 구성
     const loadingContainer = document.createElement('div');
     loadingContainer.style.display = "flex";
     loadingContainer.style.flexDirection = "column";
@@ -101,33 +62,35 @@
     loadingContainer.style.color = "#444";
     loadingContainer.style.fontSize = "1.1rem";
     loadingContainer.style.textAlign = "center";
-    loadingContainer.style.gap = "14px";
+    loadingContainer.style.gap = "12px";
 
-    // 🪞 거울 반사형 로딩 추가
-    const mirrorLoader = document.createElement('div');
-    mirrorLoader.className = "mirror-loader";
-    for (let i = 0; i < 8; i++) {
-      const span = document.createElement('span');
-      mirrorLoader.appendChild(span);
-    }
+    const spinner = document.createElement('div');
+    spinner.style.border = "6px solid #eee";
+    spinner.style.borderTop = "6px solid black";
+    spinner.style.borderRadius = "50%";
+    spinner.style.width = "40px";
+    spinner.style.height = "40px";
+    spinner.style.animation = "spin 1s linear infinite";
 
     const text = document.createElement('p');
     text.textContent = "이미지 업로드 중입니다... (잠시만 기다려주세요)";
     text.style.margin = "0";
 
-    loadingContainer.appendChild(mirrorLoader);
+    loadingContainer.appendChild(spinner);
     loadingContainer.appendChild(text);
     document.body.insertBefore(loadingContainer, saveBtn);
 
-    // 이미지 처리 로직
     if (imgUrl) {
       const finalUrl = imgUrl.startsWith("http") ? imgUrl : "images/" + imgUrl;
 
+      // 이미지 존재 여부 먼저 확인
       fetch(finalUrl, { method: "HEAD", cache: "no-store" })
         .then(res => {
           if (res.ok) {
+            // 존재하면 로딩 표시 → 30초 후 이미지 표시
             startLoadingSequence(finalUrl);
           } else {
+            // ❌ 존재하지 않으면 바로 삭제 문구 표시
             showDeletedMessage();
           }
         })
@@ -137,6 +100,7 @@
     }
 
     function startLoadingSequence(finalUrl) {
+      // 로딩 중에는 스피너 유지
       setTimeout(() => {
         art.src = finalUrl + "?t=" + new Date().getTime();
         art.onload = () => {
@@ -149,7 +113,7 @@
     }
 
     function showDeletedMessage() {
-      loadingContainer.innerHTML = "";
+      loadingContainer.innerHTML = ""; // 기존 스피너 제거
       const msg = document.createElement('p');
       msg.textContent = "이미지가 삭제되었거나 존재하지 않습니다.";
       msg.style.fontSize = "1.1rem";
