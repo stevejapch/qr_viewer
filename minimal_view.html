@@ -59,10 +59,12 @@
     loadingContainer.style.display = "flex";
     loadingContainer.style.flexDirection = "column";
     loadingContainer.style.alignItems = "center";
-    loadingContainer.style.marginTop = "15vh";
+    loadingContainer.style.justifyContent = "center";
+    loadingContainer.style.height = "100vh";
     loadingContainer.style.color = "#444";
     loadingContainer.style.fontSize = "1.1rem";
     loadingContainer.style.gap = "12px";
+    loadingContainer.style.textAlign = "center";
 
     const spinner = document.createElement('div');
     spinner.style.border = "6px solid #eee";
@@ -74,6 +76,7 @@
 
     const text = document.createElement('p');
     text.textContent = "이미지 업로드 중입니다... (잠시만 기다려주세요)";
+    text.style.margin = "0";
 
     loadingContainer.appendChild(spinner);
     loadingContainer.appendChild(text);
@@ -109,8 +112,16 @@
     }
 
     function showDeletedMessage() {
-      spinner.style.display = "none";
-      text.textContent = "이미지가 삭제되었거나 존재하지 않습니다.";
+      // 로딩 요소 제거 후 동일한 스타일로 텍스트만 표시
+      loadingContainer.innerHTML = "";
+      const msg = document.createElement('p');
+      msg.textContent = "이미지가 삭제되었거나 존재하지 않습니다.";
+      msg.style.fontSize = "1.1rem";
+      msg.style.color = "#444";
+      msg.style.textAlign = "center";
+      msg.style.margin = "0";
+      loadingContainer.appendChild(msg);
+      document.body.appendChild(loadingContainer);
     }
 
     saveBtn.addEventListener('click', () => {
