@@ -41,31 +41,69 @@
   <button id="saveBtn">이미지 저장하기</button>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const imgUrl = params.get('img');
-    const art = document.getElementById('art');
-    const saveBtn = document.getElementById('saveBtn');
+  const params = new URLSearchParams(window.location.search);
+  const imgUrl = params.get('img');
+  const art = document.getElementById('art');
+  const saveBtn = document.getElementById('saveBtn');
 
-    if (imgUrl) {
-    // 만약 URL이 절대경로(https://...)가 아니면 자동으로 images 폴더 안에서 찾기
-    let finalUrl = imgUrl;
-    if (!imgUrl.startsWith("http")) {
-      finalUrl = "images/" + imgUrl;
+  // 🔹 로딩 문구 컨테이너
+  const loadingText = document.createElement('div');
+  loadingText.style.marginTop = "30px";
+  loadingText.style.fontSize = "1.1rem";
+  loadingText.style.color = "#444";
+  loadingText.style.display = "flex";
+  loadingText.style.flexDirection = "column";
+  loadingText.style.alignItems = "center";
+  loadingText.style.gap = "12px";
+
+  // 🔹 로딩 애니메이션 (회전 원)
+  const spinner = document.createElement('div');
+  spinner.style.border = "6px solid #f3f3f3";
+  spinner.style.borderTop = "6px solid black";
+  spinner.style.borderRadius = "50%";
+  spinner.style.width = "40px";
+  spinner.style.height = "40px";
+  spinner.style.animation = "spin 1s linear infinite";
+
+  const text = document.createElement('p');
+  text.textContent = "이미지 업로드 중입니다... (잠시만 기다려주세요)";
+
+  loadingText.appendChild(spinner);
+  loadingText.appendChild(text);
+  document.body.insertBefore(loadingText, saveBtn);
+
+  // 🔹 CSS 애니메이션 정의
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
-    art.src = finalUrl;
+  `;
+  document.head.appendChild(style);
+
+  // 🔹 이미지 로딩 로직
+  if (imgUrl) {
+    setTimeout(() => {
+      art.src = imgUrl + "?t=" + new Date().getTime(); // 캐시 방지
+      art.onload = () => {
+        loadingText.style.display = "none"; // 이미지 로드 완료 시 숨김
+      };
+    }, 20000); // 20초 후 로드
   } else {
     art.alt = "이미지 URL이 없습니다.";
     saveBtn.style.display = "none";
+    text.textContent = "유효한 이미지 링크가 없습니다.";
   }
 
-    saveBtn.addEventListener('click', () => {
-      const link = document.createElement('a');
-      link.href = art.src;
-      link.download = 'selfportrait.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
-  </script>
+  saveBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.href = art.src;
+    link.download = 'selfportrait.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+</script>
 </body>
 </html>
