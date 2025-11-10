@@ -1,3 +1,4 @@
+<!-- refresh -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -34,10 +35,6 @@
   button:hover {
     background: #333;
   }
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
 </style>
 </head>
 <body>
@@ -45,104 +42,101 @@
   <button id="saveBtn">이미지 저장하기</button>
 
   <script defer>
-    const params = new URLSearchParams(window.location.search);
-    const imgUrl = params.get('img');
-    const art = document.getElementById('art');
-    const saveBtn = document.getElementById('saveBtn');
+  const params = new URLSearchParams(window.location.search);
+  const imgUrl = params.get('img');
+  const art = document.getElementById('art');
+  const saveBtn = document.getElementById('saveBtn');
 
-    art.style.display = "none";
-    saveBtn.style.display = "none";
+  // 로딩/버튼 초기 상태
+  art.style.display = "none";
+  saveBtn.style.display = "none";
 
-    const loadingContainer = document.createElement('div');
-    loadingContainer.style.display = "flex";
-    loadingContainer.style.flexDirection = "column";
-    loadingContainer.style.alignItems = "center";
-    loadingContainer.style.justifyContent = "center";
-    loadingContainer.style.height = "100vh";
-    loadingContainer.style.color = "#444";
-    loadingContainer.style.fontSize = "1.1rem";
-    loadingContainer.style.textAlign = "center";
-    loadingContainer.style.gap = "12px";
+  // 로딩 UI 구성
+  const loadingContainer = document.createElement('div');
+  loadingContainer.style.display = "flex";
+  loadingContainer.style.flexDirection = "column";
+  loadingContainer.style.alignItems = "center";
+  loadingContainer.style.marginTop = "15vh";
+  loadingContainer.style.color = "#444";
+  loadingContainer.style.fontSize = "1.1rem";
+  loadingContainer.style.gap = "12px";
 
-    const spinner = document.createElement('div');
-    spinner.style.border = "6px solid #eee";
-    spinner.style.borderTop = "6px solid black";
-    spinner.style.borderRadius = "50%";
-    spinner.style.width = "40px";
-    spinner.style.height = "40px";
-    spinner.style.animation = "spin 1s linear infinite";
+  const spinner = document.createElement('div');
+  spinner.style.border = "6px solid #eee";
+  spinner.style.borderTop = "6px solid black";
+  spinner.style.borderRadius = "50%";
+  spinner.style.width = "40px";
+  spinner.style.height = "40px";
+  spinner.style.animation = "spin 1s linear infinite";
 
-    const text = document.createElement('p');
-    text.textContent = "이미지 업로드 중입니다... (잠시만 기다려주세요)";
-    text.style.margin = "0";
+  const text = document.createElement('p');
+  text.textContent = "이미지 업로드 중입니다... (잠시만 기다려주세요)";
 
-    loadingContainer.appendChild(spinner);
-    loadingContainer.appendChild(text);
-    document.body.insertBefore(loadingContainer, saveBtn);
+  loadingContainer.appendChild(spinner);
+  loadingContainer.appendChild(text);
+  document.body.insertBefore(loadingContainer, saveBtn);
 
-    const cacheKey = "loaded_" + imgUrl;
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
 
-    if (imgUrl) {
-      // ✅ 현재 HTML 위치 기반으로 images 경로 자동 계산
-      const basePath = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "/");
-      const finalUrl = imgUrl.startsWith("http") ? imgUrl : basePath + "images/" + imgUrl;
+  // ✅ 캐시 상태 확인용 키 (파일명으로 구분)
+  const cacheKey = "loaded_" + imgUrl;
 
-      // ✅ 캐시 확인
-      if (localStorage.getItem(cacheKey) === "true") {
-        showImage(finalUrl, false);
-      } else {
-        startDelayedCheck(finalUrl);
-      }
+  if (imgUrl) {
+    // 이미 로드된 이미지면 바로 표시
+    if (localStorage.getItem(cacheKey) === "true") {
+      showImageImmediately();
     } else {
-      showDeletedMessage();
+      // 처음 접속 → 로딩 후 표시
+      startLoadingSequence();
     }
+  } else {
+    text.textContent = "이미지 URL이 없습니다.";
+    spinner.style.display = "none";
+  }
 
-    function startDelayedCheck(finalUrl) {
-      setTimeout(() => {
-        fetch(finalUrl, { method: "HEAD", cache: "no-store" })
-          .then(res => {
-            if (res.ok) {
-              showImage(finalUrl, true);
-            } else {
-              showDeletedMessage();
-            }
-          })
-          .catch(showDeletedMessage);
-      }, 30000);
-    }
+  function showImageImmediately() {
+    let finalUrl = imgUrl.startsWith("http") ? imgUrl : "images/" + imgUrl;
+    art.src = finalUrl + "?t=" + new Date().getTime();
+    art.onload = () => {
+      loadingContainer.remove();
+      art.style.display = "block";
+      saveBtn.style.display = "block";
+    };
+  }
 
-    function showImage(finalUrl, firstLoad) {
+  function startLoadingSequence() {
+    setTimeout(() => {
+      let finalUrl = imgUrl.startsWith("http") ? imgUrl : "images/" + imgUrl;
       art.src = finalUrl + "?t=" + new Date().getTime();
       art.onload = () => {
+        localStorage.setItem(cacheKey, "true"); // ✅ 로드 완료 표시 저장
         loadingContainer.remove();
         art.style.display = "block";
         saveBtn.style.display = "block";
-        if (firstLoad) {
-          localStorage.setItem("loaded_" + imgUrl, "true");
-        }
       };
-      art.onerror = showDeletedMessage;
-    }
+      art.onerror = () => {
+        text.textContent = "아직 업로드 중입니다... 잠시 후 다시 시도해주세요.";
+        setTimeout(() => location.reload(), 10000);
+      };
+    }, 30000); // 첫 접속시만 30초 대기
+  }
 
-    function showDeletedMessage() {
-      loadingContainer.innerHTML = "";
-      const msg = document.createElement('p');
-      msg.textContent = "이미지가 삭제되었거나 존재하지 않습니다.";
-      msg.style.fontSize = "1.1rem";
-      msg.style.color = "#444";
-      msg.style.textAlign = "center";
-      msg.style.margin = "0";
-      loadingContainer.appendChild(msg);
-    }
+  saveBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.href = art.src;
+    link.download = 'selfportrait.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+</script>
 
-    saveBtn.addEventListener('click', () => {
-      const link = document.createElement('a');
-      link.href = art.src;
-      link.download = 'selfportrait.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
-  </script>
 </body>
 </html>
