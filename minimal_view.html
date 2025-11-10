@@ -39,40 +39,45 @@
 <body>
   <img id="art" src="" alt="Artwork">
   <button id="saveBtn">이미지 저장하기</button>
-
-  <script>
+<script defer>
   const params = new URLSearchParams(window.location.search);
   const imgUrl = params.get('img');
   const art = document.getElementById('art');
   const saveBtn = document.getElementById('saveBtn');
 
-  // 🔹 로딩 문구 컨테이너
-  const loadingText = document.createElement('div');
-  loadingText.style.marginTop = "30px";
-  loadingText.style.fontSize = "1.1rem";
-  loadingText.style.color = "#444";
-  loadingText.style.display = "flex";
-  loadingText.style.flexDirection = "column";
-  loadingText.style.alignItems = "center";
-  loadingText.style.gap = "12px";
+  // 처음에는 이미지와 버튼 숨기기
+  art.style.display = "none";
+  saveBtn.style.display = "none";
 
-  // 🔹 로딩 애니메이션 (회전 원)
+  // 🔹 로딩 컨테이너 생성
+  const loadingContainer = document.createElement('div');
+  loadingContainer.style.display = "flex";
+  loadingContainer.style.flexDirection = "column";
+  loadingContainer.style.alignItems = "center";
+  loadingContainer.style.marginTop = "15vh";
+  loadingContainer.style.color = "#444";
+  loadingContainer.style.fontSize = "1.1rem";
+  loadingContainer.style.gap = "12px";
+
+  // 🔹 회전 스피너
   const spinner = document.createElement('div');
-  spinner.style.border = "6px solid #f3f3f3";
+  spinner.style.border = "6px solid #eee";
   spinner.style.borderTop = "6px solid black";
   spinner.style.borderRadius = "50%";
   spinner.style.width = "40px";
   spinner.style.height = "40px";
   spinner.style.animation = "spin 1s linear infinite";
 
+  // 🔹 텍스트
   const text = document.createElement('p');
   text.textContent = "이미지 업로드 중입니다... (잠시만 기다려주세요)";
 
-  loadingText.appendChild(spinner);
-  loadingText.appendChild(text);
-  document.body.insertBefore(loadingText, saveBtn);
+  // 컨테이너에 추가
+  loadingContainer.appendChild(spinner);
+  loadingContainer.appendChild(text);
+  document.body.insertBefore(loadingContainer, saveBtn);
 
-  // 🔹 CSS 애니메이션 정의
+  // CSS 애니메이션
   const style = document.createElement('style');
   style.innerHTML = `
     @keyframes spin {
@@ -82,20 +87,25 @@
   `;
   document.head.appendChild(style);
 
-  // 🔹 이미지 로딩 로직
+  // 이미지 로드 순서 제어
   if (imgUrl) {
+    // 20초 기다린 후 이미지 로드 시도
     setTimeout(() => {
-      art.src = imgUrl + "?t=" + new Date().getTime(); // 캐시 방지
+      art.src = imgUrl + "?t=" + new Date().getTime(); // 캐시 무효화
       art.onload = () => {
-        loadingText.style.display = "none"; // 이미지 로드 완료 시 숨김
+        // 로딩 문구 제거
+        loadingContainer.remove();
+        // 이미지 및 버튼 표시
+        art.style.display = "block";
+        saveBtn.style.display = "block";
       };
-    }, 20000); // 20초 후 로드
+    }, 20000); // 20초 지연
   } else {
-    art.alt = "이미지 URL이 없습니다.";
-    saveBtn.style.display = "none";
-    text.textContent = "유효한 이미지 링크가 없습니다.";
+    text.textContent = "이미지 URL이 없습니다.";
+    spinner.style.display = "none";
   }
 
+  // 저장 버튼 동작
   saveBtn.addEventListener('click', () => {
     const link = document.createElement('a');
     link.href = art.src;
