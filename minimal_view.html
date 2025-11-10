@@ -50,11 +50,9 @@
     const art = document.getElementById('art');
     const saveBtn = document.getElementById('saveBtn');
 
-    // 초기 숨김
     art.style.display = "none";
     saveBtn.style.display = "none";
 
-    // 로딩 UI
     const loadingContainer = document.createElement('div');
     loadingContainer.style.display = "flex";
     loadingContainer.style.flexDirection = "column";
@@ -63,8 +61,8 @@
     loadingContainer.style.height = "100vh";
     loadingContainer.style.color = "#444";
     loadingContainer.style.fontSize = "1.1rem";
-    loadingContainer.style.gap = "12px";
     loadingContainer.style.textAlign = "center";
+    loadingContainer.style.gap = "12px";
 
     const spinner = document.createElement('div');
     spinner.style.border = "6px solid #eee";
@@ -85,12 +83,14 @@
     if (imgUrl) {
       const finalUrl = imgUrl.startsWith("http") ? imgUrl : "images/" + imgUrl;
 
-      // 이미지 존재 확인
-      fetch(finalUrl, { method: "HEAD" })
+      // 이미지 존재 여부 먼저 확인
+      fetch(finalUrl, { method: "HEAD", cache: "no-store" })
         .then(res => {
           if (res.ok) {
+            // 존재하면 로딩 표시 → 30초 후 이미지 표시
             startLoadingSequence(finalUrl);
           } else {
+            // ❌ 존재하지 않으면 바로 삭제 문구 표시
             showDeletedMessage();
           }
         })
@@ -100,6 +100,7 @@
     }
 
     function startLoadingSequence(finalUrl) {
+      // 로딩 중에는 스피너 유지
       setTimeout(() => {
         art.src = finalUrl + "?t=" + new Date().getTime();
         art.onload = () => {
@@ -112,8 +113,7 @@
     }
 
     function showDeletedMessage() {
-      // 로딩 요소 제거 후 동일한 스타일로 텍스트만 표시
-      loadingContainer.innerHTML = "";
+      loadingContainer.innerHTML = ""; // 기존 스피너 제거
       const msg = document.createElement('p');
       msg.textContent = "이미지가 삭제되었거나 존재하지 않습니다.";
       msg.style.fontSize = "1.1rem";
@@ -121,7 +121,6 @@
       msg.style.textAlign = "center";
       msg.style.margin = "0";
       loadingContainer.appendChild(msg);
-      document.body.appendChild(loadingContainer);
     }
 
     saveBtn.addEventListener('click', () => {
